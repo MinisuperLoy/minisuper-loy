@@ -5,20 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Minisuper Loy - Punto de Venta</title>
 <style>
-body{font-family:Arial; background:#f4f6f8; margin:0; padding:10px;}
-.punto{font-weight:bold; background:#0a4d2e; color:white; padding:10px; border-radius:8px; margin-bottom:10px;}
-.container{display:grid; grid-template-columns: 1.2fr 0.4fr; gap:15px;}
-
-/* PRODUCTOS FIJOS */
-.products{display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; grid-auto-rows:110px}
-.card{background:white; padding:10px; border-radius:10px; box-shadow:0 2px 5px #0001; text-align:center; cursor:pointer; height:110px; min-height:110px; max-height:110px; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden}
-.card b{font-size:14px; line-height:15px; max-height:30px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
-
-/* TICKET CON SCROLL Y BOTON FIJO */
-.ticket{background:white; border-radius:12px; padding:15px; border:1px solid #ddd; height:calc(100vh - 40px); display:flex; flex-direction:column; position:sticky; top:10px;}
-#ticket-lista{flex:1; overflow-y:auto; margin:10px 0; border-top:1px solid #eee; border-bottom:1px solid #eee; padding:5px 0;}
-#ticket-lista::-webkit-scrollbar{width:6px}
-#ticket-lista::-webkit-scrollbar-thumb{background:#aaa; border-radius:10px}
+body{font-family:Arial; background:#f4f6f8; margin:0; padding:0; height:100vh; overflow:hidden; display:flex; flex-direction:column;}
+.punto{font-weight:bold; background:#0a4d2e; color:white; padding:10px 15px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:sticky; top:0; z-index:10;}
+.punto input{flex:1; max-width:400px; padding:10px 12px; border:none; border-radius:8px; font-size:16px;}
+.container{display:grid; grid-template-columns: 1.2fr 0.4fr; gap:15px; padding:10px; flex:1; overflow:hidden;}
+.products-wrap{overflow-y:auto; padding-right:5px;}
+.products{display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; grid-auto-rows:110px; align-content:start;}
+.card{background:white; padding:10px; border-radius:10px; box-shadow:0 2px 5px #0001; text-align:center; cursor:pointer; height:110px; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden}
+.card b{font-size:14px; max-height:30px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
+.ticket{background:white; border-radius:12px; padding:15px; border:1px solid #ddd; display:flex; flex-direction:column; height:100%;}
+#ticket-lista{flex:1; overflow-y:auto; margin:10px 0; border-top:1px solid #eee; border-bottom:1px solid #eee;}
 .ticket-footer{margin-top:auto; padding-top:10px; background:white;}
 #total{font-size:20px; font-weight:bold; margin-bottom:10px;}
 .btn-cobrar{width:100%; background:#00c853; color:white; padding:15px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;}
@@ -26,47 +22,44 @@ body{font-family:Arial; background:#f4f6f8; margin:0; padding:10px;}
 </style>
 </head>
 <body>
-<div class="punto">PUNTO DE VENTA - MINISUPER LOY</div>
+<div class="punto">
+  <span>PUNTO DE VENTA - MINISUPER LOY</span>
+  <input type="text" id="buscador" placeholder="Buscar producto... Ej: leche, sabritas" oninput="buscar()">
+</div>
 <div class="container">
-<div class="products" id="products"></div>
-<div class="ticket">
-<h3>Ticket</h3>
-<div id="ticket-lista"></div>
-<div class="ticket-footer">
-  <div id="total">Total: $0.00</div>
-  <button class="btn-cobrar" onclick="cobrar()">COBRAR + IMPRIMIR (3nStar)</button>
-  <button class="btn-limpiar" onclick="limpiar()">Limpiar</button>
-</div>
-</div>
+  <div class="products-wrap"><div class="products" id="products"></div></div>
+  <div class="ticket">
+    <h3 style="margin:0">Ticket</h3>
+    <div id="ticket-lista"></div>
+    <div class="ticket-footer">
+      <div id="total">Total: $0.00</div>
+      <button class="btn-cobrar" onclick="cobrar()">COBRAR + IMPRIMIR (3nStar)</button>
+      <button class="btn-limpiar" onclick="limpiar()">Limpiar</button>
+    </div>
+  </div>
 </div>
 <script>
-// pega aquí tu javascript original que tenías
 const productos = [
-{name:"Leche Lala 1L", price:28},
-{name:"Huevo 12pz", price:45},
-{name:"Pan Bimbo", price:38},
-{name:"Cerveza Tecate", price:25},
-{name:"Sabritas 45g", price:18},
-{name:"Coca Cola 600ml", price:20},
-{name:"Agua 1.5L", price:15},
-{name:"Maruchan", price:14},
+{name:"Leche Lala 1L", price:28}, {name:"Huevo 12pz", price:45}, {name:"Pan Bimbo", price:38}, {name:"Cerveza Tecate", price:25},
+{name:"Sabritas 45g", price:18}, {name:"Coca Cola 600ml", price:20}, {name:"Agua 1.5L", price:15}, {name:"Maruchan", price:14},
 ];
 let ticket=[];
+let filtro = [...productos];
 function renderProducts(){
   const c=document.getElementById('products');
-  c.innerHTML=productos.map((p,i)=>`<div class="card" onclick="add(${i})"><b>${p.name}</b><br>$${p.price}<br><small>000${i}</small></div>`).join('');
+  c.innerHTML=filtro.map((p)=>{ let i=productos.indexOf(p); return `<div class="card" onclick="add(${i})"><b>${p.name}</b><br>$${p.price}<br><small>000${i}</small></div>`}).join('');
 }
-function add(i){
-  ticket.push(productos[i]);
-  renderTicket();
+function buscar(){
+  let q=document.getElementById('buscador').value.toLowerCase();
+  filtro = productos.filter(p=>p.name.toLowerCase().includes(q));
+  renderProducts();
 }
+function add(i){ ticket.push(productos[i]); renderTicket(); }
 function renderTicket(){
   let total=0;
   document.getElementById('ticket-lista').innerHTML=ticket.map(t=>{total+=t.price; return `<div style="display:flex; justify-content:space-between; font-size:14px; margin:4px 0;"><span>1x ${t.name}</span><span>$${t.price}</span></div>`}).join('');
   document.getElementById('total').innerText='Total: $'+total+'.00';
-  // auto scroll abajo
-  const lista=document.getElementById('ticket-lista');
-  lista.scrollTop = lista.scrollHeight;
+  document.getElementById('ticket-lista').scrollTop = 9999;
 }
 function limpiar(){ticket=[]; renderTicket();}
 function cobrar(){window.print(); limpiar();}
