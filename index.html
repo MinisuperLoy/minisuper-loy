@@ -1,95 +1,44 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Minisuper Loy - POS</title>
 <style>
-body{font-family:system-ui;background:#f0fdf4;margin:0;padding:10px}
-.header{background:#16a34a;color:white;padding:15px;border-radius:10px;text-align:center;font-size:22px;font-weight:bold}
-.grid{display:grid;grid-template-columns:1fr 350px;gap:15px;margin-top:15px}
-.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;grid-auto-rows:110px}
-.card{background:white;padding:10px;border-radius:10px;box-shadow:0 2px 5px #0001;text-align:center;cursor:pointer;height:110px;min-height:110px;max-height:110px;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden}
-.card b{font-size:14px;line-height:15px;max-height:30px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.card{background:white;padding:10px;border-radius:10px;box-shadow:0 2px 5px #0001;text-align:center;cursor:pointer}
-.card{background:white;padding:10px;border-radius:10px;box-shadow:0 2px 5px #0001;text-align:center;cursor:pointer}
-.card:hover{background:#dcfce7}
-.cart{background:white;padding:15px;border-radius:10px;position:sticky;top:10px}
-input{width:100%;padding:12px;border:2px solid #16a34a;border-radius:8px;font-size:16px;box-sizing:border-box}
-button{background:#16a34a;color:white;border:none;padding:12px;width:100%;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;margin-top:10px}
-button:hover{background:#15803d}
-.item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
-.total{font-size:24px;font-weight:bold;color:#16a34a;text-align:right;margin-top:10px}
-@media print{.no-print{display:none}}
+  .container{display:grid; grid-template-columns: 1.2fr 0.4fr; gap:15px;}
+  
+  .ticket{
+    background:white;
+    border-radius:12px;
+    padding:15px;
+    border:1px solid #ddd;
+    height: calc(100vh - 100px);
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:20px;
+  }
+
+  /* ESTA PARTE HACE EL SCROLL */
+  #ticket-lista{
+    flex:1;
+    overflow-y:auto;
+    margin:10px 0;
+    border-top:1px solid #eee;
+    border-bottom:1px solid #eee;
+    padding:5px 0;
+  }
+  #ticket-lista::-webkit-scrollbar{width:6px}
+  #ticket-lista::-webkit-scrollbar-thumb{background:#aaa; border-radius:10px}
+
+  .ticket-footer{
+    margin-top:auto;
+    padding-top:10px;
+    background:white;
+  }
 </style>
-</head>
-<body>
-<div class="header">🛒 MINISUPER LOY - PUNTO DE VENTA</div>
-<div style="margin-top:10px" class="no-print">
-<input id="busca" placeholder="Escanea código o busca producto... (ej: coca)" autofocus>
+
+<div class="ticket">
+  <h3>Ticket</h3>
+  <div id="ticket-lista"></div>
+  
+  <div class="ticket-footer">
+    <div id="total">Total: $0.00</div>
+    <button class="btn-cobrar" style="width:100%; background:#00c853; color:white; padding:15px; border:none; border-radius:10px; font-weight:bold; margin-top:10px;">COBRAR + IMPRIMIR (3nStar)</button>
+    <button style="width:100%; background:#303f9f; color:white; padding:12px; border:none; border-radius:10px; margin-top:8px;" onclick="limpiar()">Limpiar</button>
+  </div>
 </div>
-<div class="grid">
-<div class="products" id="products"></div>
-<div class="cart">
-<h3>Ticket</h3>
-<div id="cart"></div>
-<div class="total" id="total">Total: $0.00</div>
-<button onclick="cobrar()">COBRAR + IMPRIMIR (3nStar)</button>
-<button onclick="limpiar()" style="background:#6b7280">Limpiar</button>
-<div style="margin-top:15px;font-size:12px;color:gray">Impresora: 3nStar RPT006 - Lista</div>
-</div>
-</div>
-<script>
-const productos=[
-{id:1,nombre:"Coca-Cola 600ml",precio:22,codigo:"7501055300000"},
-{id:2,nombre:"Sabritas 45g",precio:18,codigo:"7501011100000"},
-{id:3,nombre:"Cerveza Tecate",precio:25,codigo:"7501055300010"},
-{id:4,nombre:"Pan Bimbo",precio:38,codigo:"7501000000000"},
-{id:5,nombre:"Leche Lala 1L",precio:28,codigo:"7501020000000"},
-{id:6,nombre:"Huevo 12pz",precio:45,codigo:"7501000000001"},
-{id:7,nombre:"Agua 1.5L",precio:15,codigo:"7501055300020"},
-{id:8,nombre:"Maruchan",precio:14,codigo:"7501055300030"},
-];
-let carrito=[];
-function renderProds(f=""){
-const cont=document.getElementById("products");
-cont.innerHTML="";
-productos.filter(p=>p.nombre.toLowerCase().includes(f.toLowerCase())||p.codigo.includes(f)).forEach(p=>{
-cont.innerHTML+=`<div class="card" onclick="add(${p.id})"><b>${p.nombre}</b><br>$${p.precio}<br><small>${p.codigo.slice(-4)}</small></div>`;
-});
-}
-function add(id){
-const p=productos.find(x=>x.id===id);
-const ex=carrito.find(x=>x.id===id);
-if(ex)ex.cant++; else carrito.push({...p,cant:1});
-renderCart();
-}
-function renderCart(){
-const c=document.getElementById("cart");
-c.innerHTML="";
-let tot=0;
-carrito.forEach(it=>{
-tot+=it.precio*it.cant;
-c.innerHTML+=`<div class="item"><span>${it.cant}x ${it.nombre}</span><span>$${it.precio*it.cant}</span></div>`;
-});
-document.getElementById("total").innerText=`Total: $${tot.toFixed(2)}`;
-}
-function cobrar(){
-if(!carrito.length)return alert("Carrito vacío");
-window.print();
-alert("Venta cobrada: $"+document.getElementById("total").innerText);
-limpiar();
-}
-function limpiar(){carrito=[];renderCart();}
-document.getElementById("busca").addEventListener("input",e=>renderProds(e.target.value));
-document.getElementById("busca").addEventListener("keydown",e=>{
-if(e.key==="Enter"){
-const v=e.target.value;
-const p=productos.find(x=>x.codigo===v||x.nombre.toLowerCase().includes(v.toLowerCase()));
-if(p){add(p.id);e.target.value="";renderProds("");}
-}
-});
-renderProds("");
-</script>
-</body>
-</html>
