@@ -1,69 +1,114 @@
-J<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Minisuper Loy - Punto de Venta</title>
+<title>Minisuper Loy - POS</title>
 <style>
-body{font-family:Arial; background:#f4f6f8; margin:0; padding:0; height:100vh; overflow:hidden; display:flex; flex-direction:column;}
-.punto{font-weight:bold; background:#0a4d2e; color:white; padding:10px 15px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:sticky; top:0; z-index:10;}
-.punto input{flex:1; max-width:400px; padding:10px 12px; border:none; border-radius:8px; font-size:16px;}
-.container{display:grid; grid-template-columns: 1.2fr 0.4fr; gap:15px; padding:10px; flex:1; overflow:hidden;}
-.products-wrap{overflow-y:auto; padding-right:5px;}
-.products{display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; grid-auto-rows:110px; align-content:start;}
-.card{background:white; padding:10px; border-radius:10px; box-shadow:0 2px 5px #0001; text-align:center; cursor:pointer; height:110px; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden}
-.card b{font-size:14px; max-height:30px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
-.ticket{background:white; border-radius:12px; padding:15px; border:1px solid #ddd; display:flex; flex-direction:column; height: calc(100vh - 80px); position:sticky; top:10px;}
-#ticket-lista{flex:1; overflow-y:auto; margin:10px 0; border-top:1px solid #eee; border-bottom:1px solid #eee; max-height: 55vh;}
-.ticket-footer{margin-top:auto; padding-top:10px; background:white; position:sticky; bottom:0; border-top: 2px solid #0a4d2e;}
-#total{font-size:20px; font-weight:bold; margin-bottom:10px;}
-.btn-cobrar{width:100%; background:#00c853; color:white; padding:15px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;}
-.btn-limpiar{width:100%; background:#303f9f; color:white; padding:12px; border:none; border-radius:10px; margin-top:8px; cursor:pointer;}
+*{box-sizing:border-box; font-family: Arial, sans-serif;}
+body{margin:0; background:#f0f2f0;}
+.header{background:#0a4d2e; color:white; padding:12px 15px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10;}
+.header h1{margin:0; font-size:16px;}
+#buscador{padding:8px 12px; border-radius:20px; border:none; width:240px; outline:none;}
+.main{display:grid; grid-template-columns: 1fr 380px; gap:10px; padding:10px;}
+.productos{display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:10px; align-content:start;}
+.prod{background:white; border:1px solid #ddd; border-radius:10px; padding:12px; text-align:center; cursor:pointer; min-height:75px; display:flex; flex-direction:column; justify-content:center;}
+.prod b{font-size:13px; display:block; margin-bottom:4px;}
+.prod span{color:#0a4d2e; font-weight:bold; font-size:16px;}
+.ticket{background:white; border-radius:12px; padding:15px; border:1px solid #ddd; display:flex; flex-direction:column; height: calc(100vh - 75px); position:sticky; top:65px;}
+#ticket-lista{flex:1; overflow-y:auto; margin:10px 0; border-top:1px solid #eee; border-bottom:1px solid #eee;}
+.item{display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dotted #eee; font-size:14px;}
+.ticket-footer{margin-top:auto; padding-top:10px; background:white; position:sticky; bottom:0; border-top:2px solid #0a4d2e;}
+.total{font-size:22px; font-weight:bold; display:flex; justify-content:space-between; margin:10px 0;}
+.btn{width:100%; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:8px;}
+.btn-espera{background:#ffc107; color:black;}
+.btn-cobrar{background:#0a4d2e; color:white; font-size:18px;}
+.btn-limpiar{background:#eee; color:#333;}
 </style>
 </head>
 <body>
-<div class="punto">
-  <span>PUNTO DE VENTA - MINISUPER LOY</span>
-  <input type="text" id="buscador" placeholder="Buscar producto... Ej: leche, sabritas" oninput="buscar()">
+<div class="header">
+  <h1>PUNTO DE VENTA MINISUPER LOY</h1>
+  <input id="buscador" type="text" placeholder="Buscar producto... Ej: leche, sabritas" onkeyup="filtrar()">
 </div>
-<div class="container">
-  <div class="products-wrap"><div class="products" id="products"></div></div>
+
+<div class="main">
+  <div class="productos" id="grid"></div>
+
   <div class="ticket">
-    <h3 style="margin:0">Ticket</h3>
-    <div id="ticket-lista"></div>
+    <h3 style="margin:0;">Ticket de Venta</h3>
+    <div id="lista-espera"></div>
+    <div id="ticket-lista">Ticket vacío</div>
     <div class="ticket-footer">
-      <div id="total">Total: $0.00</div>
-      <button class="btn-cobrar" onclick="cobrar()">COBRAR + IMPRIMIR (3nStar)</button>
-      <button class="btn-limpiar" onclick="limpiar()">Limpiar</button>
+      <div class="total"><span>Total:</span><span id="total">$0.00</span></div>
+      <button class="btn btn-espera" onclick="ponerEnEspera()">⏸️ PONER EN ESPERA</button>
+      <button class="btn btn-limpiar" onclick="limpiarTicket()">Limpiar</button>
+      <button class="btn btn-cobrar" onclick="cobrar()">COBRAR + IMPRIMIR</button>
     </div>
   </div>
 </div>
+
 <script>
-const productos = [
-{name:"Leche Lala 1L", price:28}, {name:"Huevo 12pz", price:45}, {name:"Pan Bimbo", price:38}, {name:"Cerveza Tecate", price:25},
-{name:"Sabritas 45g", price:18}, {name:"Coca Cola 600ml", price:20}, {name:"Agua 1.5L", price:15}, {name:"Maruchan", price:14},
+let productos = [
+ {id:1, nombre:"Coca Cola 600ml", precio:20},
+ {id:2, nombre:"Sabritas Original 45g", precio:18},
+ {id:3, nombre:"Leche Lala 1L", precio:28},
+ {id:4, nombre:"Pan Bimbo Blanco", precio:42},
+ {id:5, nombre:"Huevo 1kg", precio:45},
+ {id:6, nombre:"Tortillas 1kg", precio:25},
+ {id:7, nombre:"Aceite 1L", precio:38},
+ {id:8, nombre:"Jabon Zote", precio:15},
 ];
-let ticket=[];
-let filtro = [...productos];
-function renderProducts(){
-  const c=document.getElementById('products');
-  c.innerHTML=filtro.map((p)=>{ let i=productos.indexOf(p); return `<div class="card" onclick="add(${i})"><b>${p.name}</b><br>$${p.price}<br><small>000${i}</small></div>`}).join('');
+
+let ticket = [];
+let ventasEnEspera = JSON.parse(localStorage.getItem('loy_espera') || '[]');
+
+function renderProductos(lista = productos){
+  document.getElementById('grid').innerHTML = lista.map(p =>
+    `<div class="prod" onclick="agregar(${p.id})"><b>${p.nombre}</b><span>$${p.precio.toFixed(2)}</span></div>`
+  ).join('');
 }
-function buscar(){
-  let q=document.getElementById('buscador').value.toLowerCase();
-  filtro = productos.filter(p=>p.name.toLowerCase().includes(q));
-  renderProducts();
+function filtrar(){
+  let q = document.getElementById('buscador').value.toLowerCase();
+  renderProductos(productos.filter(p => p.nombre.toLowerCase().includes(q)));
 }
-function add(i){ ticket.push(productos[i]); renderTicket(); }
+function agregar(id){
+  let p = productos.find(x=>x.id===id);
+  let ex = ticket.find(x=>x.id===id);
+  if(ex) ex.cant++; else ticket.push({...p, cant:1});
+  renderTicket();
+}
 function renderTicket(){
+  if(ticket.length===0){ document.getElementById('ticket-lista').innerHTML='Ticket vacío'; document.getElementById('total').innerText='$0.00'; return; }
   let total=0;
-  document.getElementById('ticket-lista').innerHTML=ticket.map(t=>{total+=t.price; return `<div style="display:flex; justify-content:space-between; font-size:14px; margin:4px 0;"><span>1x ${t.name}</span><span>$${t.price}</span></div>`}).join('');
-  document.getElementById('total').innerText='Total: $'+total+'.00';
-  document.getElementById('ticket-lista').scrollTop = 9999;
+  document.getElementById('ticket-lista').innerHTML = ticket.map((t,i)=>{ total+=t.precio*t.cant; return `<div class="item"><span>${t.cant}x ${t.nombre}</span><span>$${(t.precio*t.cant).toFixed(2)} <b onclick="ticket.splice(${i},1);renderTicket()" style="color:red;cursor:pointer;">x</b></span></div>`}).join('');
+  document.getElementById('total').innerText='$'+total.toFixed(2);
 }
-function limpiar(){ticket=[]; renderTicket();}
-function cobrar(){window.print(); limpiar();}
-renderProducts();
+function limpiarTicket(){ ticket=[]; renderTicket(); }
+function cobrar(){
+  if(ticket.length===0) return alert('Ticket vacío');
+  window.print();
+  limpiarTicket();
+}
+function ponerEnEspera(){
+  if(ticket.length===0) return alert('Ticket vacío');
+  let total = ticket.reduce((s,t)=>s+t.precio*t.cant,0);
+  ventasEnEspera.push({id: Date.now(), items: [...ticket], total});
+  localStorage.setItem('loy_espera', JSON.stringify(ventasEnEspera));
+  limpiarTicket(); mostrarEspera();
+}
+function mostrarEspera(){
+  let div = document.getElementById('lista-espera');
+  if(ventasEnEspera.length===0){ div.innerHTML=''; return; }
+  div.innerHTML = ventasEnEspera.map((v,i)=>`<div style="background:#fff3cd; padding:6px 10px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; font-size:13px;"><span>Espera #${i+1} - $${v.total.toFixed(2)}</span><button onclick="recuperarEspera(${i})" style="background:#0a4d2e; color:white; border:none; border-radius:4px; padding:4px 8px;">Recuperar</button></div>`).join('');
+}
+function recuperarEspera(i){
+  ticket = ventasEnEspera[i].items;
+  ventasEnEspera.splice(i,1);
+  localStorage.setItem('loy_espera', JSON.stringify(ventasEnEspera));
+  renderTicket(); mostrarEspera();
+}
+renderProductos(); mostrarEspera();
 </script>
 </body>
 </html>
