@@ -1,1 +1,15 @@
-
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MINISUPER LOY POS</title><style>
+body{margin:0;background:#0f0f0f;color:#fff;font-family:system-ui;display:flex;height:100vh;flex-direction:column}
+header{padding:14px;background:#111;border-bottom:2px solid #00ff88;display:flex;justify-content:space-between;font-weight:800}
+.main{flex:1;display:flex}.left{flex:1;padding:14px;display:flex;flex-direction:column;gap:10px}.right{width:380px;background:#1a1a1a;border-left:1px solid #333;padding:12px;display:flex;flex-direction:column}
+#b{width:100%;padding:18px;border-radius:12px;border:2px solid #333;background:#222;color:#fff;font-size:18px;outline:none}#b:focus{border-color:#00ff88}
+.sug{background:#222;border-radius:10px;max-height:200px;overflow:auto;display:none;border:1px solid #333}.s{padding:10px;border-bottom:1px solid #333;cursor:pointer;display:flex;justify-content:space-between;font-size:13px}.s:hover{background:#333}
+.carrito{flex:1;overflow:auto}.it{padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;font-size:13px}.tot{font-size:50px;font-weight:900;color:#00ff88;text-align:right}.btn{background:#00ff88;color:#000;border:none;padding:16px;border-radius:12px;font-weight:900;width:100%;cursor:pointer}
+</style></head><body><header><span>MINISUPER LOY - POS PERRON</span><span style="color:#00ff88">Vercel OK ✓</span></header><div class="main"><div class="left"><input id="b" placeholder="Escanea con pistola USB o escribe..." autofocus><div id="sg" class="sug"></div><div style="opacity:.5;font-size:12px">Si ves esto en Vercel, ya quedó. Pistola USB lista 🔫</div></div><div class="right"><div id="cr" class="carrito"></div><div id="tt" class="tot">$0.00</div><button class="btn" onclick="alert('Cobrado '+document.getElementById('tt').innerText)">COBRAR + TICKET</button></div></div><script>
+const P=[{c:"7501022015858",n:"7up 600ml",p:19},{c:"1469",n:"Cargador iPhone Completo",p:220},{c:"CABLE-PREMIUM",n:"Cable iPhone Premium 2m",p:139},{c:"1584",n:"Cargador tipo C",p:160},{c:"X004BJKNZJ",n:"Funda iPhone 15 Plus",p:180}];
+let C=[];const b=document.getElementById('b'),sg=document.getElementById('sg');function busc(q){return P.filter(x=>x.c.includes(q)||x.n.toLowerCase().includes(q.toLowerCase())).slice(0,10)}
+b.addEventListener('input',e=>{let q=e.target.value.trim();if(!q){sg.style.display='none';return}let r=busc(q);sg.innerHTML=r.map(x=>`<div class=s onclick="addC('${x.c}')"><span>${x.c} - ${x.n}</span><span style=color:#00ff88>$${x.p}</span></div>`).join('');sg.style.display='block'});
+function addC(c){let p=P.find(x=>x.c===c);if(p){let f=C.find(x=>x.c===c);if(f)f.q++;else C.push({...p,q:1});ren()}b.value='';sg.style.display='none';b.focus()}
+function ren(){let h='',t=0;C.forEach(it=>{t+=it.p*it.q;h+=`<div class=it><span>${it.q}x ${it.n}</span><span>$${(it.p*it.q).toFixed(2)}</span></div>`});document.getElementById('cr').innerHTML=h||'<div style=opacity:.4;text-align:center;margin-top:40px>Carrito vacio - escanea</div>';document.getElementById('tt').innerText='$'+t.toFixed(2)}ren();
+</script></body></html>
