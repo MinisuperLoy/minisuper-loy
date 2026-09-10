@@ -1,15 +1,52 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MINISUPER LOY POS</title><style>
-body{margin:0;background:#0f0f0f;color:#fff;font-family:system-ui;display:flex;height:100vh;flex-direction:column}
-header{padding:14px;background:#111;border-bottom:2px solid #00ff88;display:flex;justify-content:space-between;font-weight:800}
-.main{flex:1;display:flex}.left{flex:1;padding:14px;display:flex;flex-direction:column;gap:10px}.right{width:380px;background:#1a1a1a;border-left:1px solid #333;padding:12px;display:flex;flex-direction:column}
-#b{width:100%;padding:18px;border-radius:12px;border:2px solid #333;background:#222;color:#fff;font-size:18px;outline:none}#b:focus{border-color:#00ff88}
-.sug{background:#222;border-radius:10px;max-height:200px;overflow:auto;display:none;border:1px solid #333}.s{padding:10px;border-bottom:1px solid #333;cursor:pointer;display:flex;justify-content:space-between;font-size:13px}.s:hover{background:#333}
-.carrito{flex:1;overflow:auto}.it{padding:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between;font-size:13px}.tot{font-size:50px;font-weight:900;color:#00ff88;text-align:right}.btn{background:#00ff88;color:#000;border:none;padding:16px;border-radius:12px;font-weight:900;width:100%;cursor:pointer}
-</style></head><body><header><span>MINISUPER LOY - POS PERRON</span><span style="color:#00ff88">Vercel OK ✓</span></header><div class="main"><div class="left"><input id="b" placeholder="Escanea con pistola USB o escribe..." autofocus><div id="sg" class="sug"></div><div style="opacity:.5;font-size:12px">Si ves esto en Vercel, ya quedó. Pistola USB lista 🔫</div></div><div class="right"><div id="cr" class="carrito"></div><div id="tt" class="tot">$0.00</div><button class="btn" onclick="alert('Cobrado '+document.getElementById('tt').innerText)">COBRAR + TICKET</button></div></div><script>
-const P=[{c:"7501022015858",n:"7up 600ml",p:19},{c:"1469",n:"Cargador iPhone Completo",p:220},{c:"CABLE-PREMIUM",n:"Cable iPhone Premium 2m",p:139},{c:"1584",n:"Cargador tipo C",p:160},{c:"X004BJKNZJ",n:"Funda iPhone 15 Plus",p:180}];
-let C=[];const b=document.getElementById('b'),sg=document.getElementById('sg');function busc(q){return P.filter(x=>x.c.includes(q)||x.n.toLowerCase().includes(q.toLowerCase())).slice(0,10)}
-b.addEventListener('input',e=>{let q=e.target.value.trim();if(!q){sg.style.display='none';return}let r=busc(q);sg.innerHTML=r.map(x=>`<div class=s onclick="addC('${x.c}')"><span>${x.c} - ${x.n}</span><span style=color:#00ff88>$${x.p}</span></div>`).join('');sg.style.display='block'});
-function addC(c){let p=P.find(x=>x.c===c);if(p){let f=C.find(x=>x.c===c);if(f)f.q++;else C.push({...p,q:1});ren()}b.value='';sg.style.display='none';b.focus()}
-function ren(){let h='',t=0;C.forEach(it=>{t+=it.p*it.q;h+=`<div class=it><span>${it.q}x ${it.n}</span><span>$${(it.p*it.q).toFixed(2)}</span></div>`});document.getElementById('cr').innerHTML=h||'<div style=opacity:.4;text-align:center;margin-top:40px>Carrito vacio - escanea</div>';document.getElementById('tt').innerText='$'+t.toFixed(2)}ren();
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MINISUPER LOY - POS PERRON v2</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;font-family:system-ui,Arial}body{margin:0;background:#0f0f0f;color:#fff;display:flex;height:100vh;flex-direction:column}
+header{padding:12px 16px;background:#111;border-bottom:2px solid #00ff88;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.main{flex:1;display:flex;overflow:hidden}.left{flex:1;padding:12px;display:flex;flex-direction:column;gap:10px;overflow:auto}.right{width:400px;background:#1a1a1a;border-left:1px solid #333;padding:12px;display:flex;flex-direction:column}
+#b{width:100%;padding:18px;border-radius:14px;border:2px solid #333;background:#222;color:#fff;font-size:20px;outline:none}#b:focus{border-color:#00ff88}
+.sug{max-height:240px;overflow:auto;background:#222;border-radius:12px;display:none;border:1px solid #333}.s{padding:11px 12px;border-bottom:1px solid #333;display:flex;justify-content:space-between;cursor:pointer;font-size:13px}.s:hover{background:#333}
+.carrito{flex:1;overflow:auto}.it{display:flex;justify-content:space-between;padding:11px;border-bottom:1px solid #222;font-size:13px}.tot{font-size:56px;font-weight:900;color:#00ff88;text-align:right;padding:10px 0}
+.btn{background:#00ff88;color:#000;border:none;padding:18px;border-radius:14px;font-weight:900;width:100%;font-size:18px;cursor:pointer;margin-top:8px}.btn2{background:#333;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:12px}
+.f{background:#222;border:1px solid #333;color:#fff;padding:10px;border-radius:10px;width:100%;margin:4px 0;font-size:13px}
+.badge{background:#00ff88;color:#000;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800}
+</style></head><body>
+<header><div>MINISUPER LOY - POS PERRON v2 <span id="cnt" class="badge">cargando...</span></div><div style="display:flex;gap:8px;align-items:center"><input type="file" id="excel" accept=".xlsx,.xls" style="display:none"><button class="btn2" onclick="document.getElementById('excel').click()">📂 Cargar Excel</button><span style="color:#00ff88;font-size:12px">Vercel OK ✓</span></div></header>
+<div class="main">
+<div class="left">
+<input id="b" placeholder="Escanea con pistola USB o escribe producto (F2)..." autofocus>
+<div id="sg" class="sug"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn2" onclick="limpiar()">ESC - Limpiar carrito</button>
+<button class="btn2" onclick="document.getElementById('b').focus()">F2 - Buscar</button>
+<button class="btn2" onclick="localStorage.clear();location.reload()">🗑️ Borrar productos guardados</button>
+</div>
+</div>
+<div class="right">
+<div id="cr" class="carrito"></div>
+<div id="tt" class="tot">$0.00</div>
+<button class="btn" onclick="cobrar()">COBRAR + IMPRIMIR TICKET 80mm</button>
+<div style="margin-top:12px;border-top:1px solid #333;padding-top:10px">
+<input id="nt" class="f" value="MINISUPER LOY"><input id="dt" class="f" value="Hermosillo, Sonora"><input id="mt" class="f" value="¡Gracias por tu compra!">
+</div>
+</div>
+</div>
+<div id="pr" style="display:none"></div>
+<script>
+let P=[{c:"7501022015858",n:"7up citrus 600 ml",p:19},{c:"KOSE35260",n:"KOSE - Producto ejemplo",p:45},{c:"1469",n:"Cargador Iphone Completo",p:220},{c:"CABLE-PREMIUM",n:"Cable iPhone Premium 2m",p:139}];
+const saved=localStorage.getItem('LOY_PRODUCTOS');if(saved){try{P=JSON.parse(saved);}catch(e){}}
+function updateCount(){document.getElementById('cnt').innerText=P.length+' productos';}updateCount();
+let C=[];const b=document.getElementById('b'),sg=document.getElementById('sg');
+function busc(q){q=q.toLowerCase();return P.filter(x=>x.c.toLowerCase().includes(q)||x.n.toLowerCase().includes(q)).slice(0,12)}
+b.addEventListener('input',e=>{let q=e.target.value.trim();if(!q){sg.style.display='none';return}let r=busc(q);if(!r.length){sg.style.display='none';return}sg.innerHTML=r.map(x=>`<div class=s onclick="addC('${x.c.replace(/'/g,"")}')"><span><b>${x.c}</b> - ${x.n.slice(0,32)}</span><span style=color:#00ff88>$${x.p}</span></div>`).join('');sg.style.display='block';});
+b.addEventListener('keydown',e=>{if(e.key==='Enter'){let v=b.value.trim();if(!v)return;let ex=P.find(x=>x.c.toLowerCase()===v.toLowerCase());if(ex)agregar(ex);else{let r=busc(v);if(r.length)agregar(r[0])}b.value='';sg.style.display='none';}if(e.key==='Escape')limpiar();});
+function addC(c){let p=P.find(x=>x.c===c);if(p)agregar(p);b.value='';sg.style.display='none';b.focus()}
+function agregar(p){let e=C.find(x=>x.c===p.c);if(e)e.q++;else C.push({...p,q:1});ren()}
+function ren(){let h='',t=0;C.forEach((it,i)=>{let s=it.p*it.q;t+=s;h+=`<div class=it><span>${it.q}x ${it.n.slice(0,28)}</span><span>$${s.toFixed(2)} <span onclick="quit(${i})" style="color:#ff4444;cursor:pointer"> X</span></span></div>`});document.getElementById('cr').innerHTML=h||'<div style="opacity:.4;text-align:center;margin-top:60px">Carrito vacío<br>Escanea con pistola USB 🔫</div>';document.getElementById('tt').innerText='$'+t.toFixed(2);}
+function quit(i){C.splice(i,1);ren()}function limpiar(){C=[];ren();b.value='';sg.style.display='none';b.focus()}
+function cobrar(){if(!C.length)return;let tot=C.reduce((a,b)=>a+b.p*b.q,0);let nom=document.getElementById('nt').value,dir=document.getElementById('dt').value,msg=document.getElementById('mt').value;let fe=new Date().toLocaleString('es-MX'),fo=Date.now().toString().slice(-6);let tk='        '+nom+'\n   '+dir+'\n--------------------------------\nFolio: '+fo+'  '+fe+'\n--------------------------------\n';C.forEach(it=>{tk+=it.q+' x '+it.n.slice(0,26)+'\n   $'+it.p.toFixed(2)+' = $'+(it.p*it.q).toFixed(2)+'\n'});tk+='--------------------------------\nTOTAL: $'+tot.toFixed(2)+'\n--------------------------------\n'+msg+'\n\n';let pr=document.getElementById('pr');pr.innerHTML='<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap">'+tk+'</pre>';pr.style.display='block';window.print();setTimeout(()=>{pr.style.display='none';limpiar()},600);}
+document.getElementById('excel').addEventListener('change',e=>{let file=e.target.files[0];if(!file)return;let reader=new FileReader();reader.onload=function(evt){let data=new Uint8Array(evt.target.result);let wb=XLSX.read(data,{type:'array'});let ws=wb.Sheets[wb.SheetNames[0]];let rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});let prods=[];for(let i=4;i<rows.length;i++){let r=rows[i];if(!r||r.length<12)continue;let clave=(r[0]||"").toString().trim();let desc=(r[2]||"").toString().trim();let pr=r[11];if(!clave||!desc)continue;if(clave.length>50)continue;let p=0;if(typeof pr==='number')p=pr;else{let s=(pr||"").toString().replace('$','').replace(',','').trim();p=parseFloat(s)||0;}if(p<=0)continue;desc=desc.replace(/"/g,'').replace(/'/g,'').slice(0,55);prods.push({c:clave,n:desc,p:p});}if(prods.length>0){P=prods;localStorage.setItem('LOY_PRODUCTOS',JSON.stringify(P));updateCount();alert('¡Listo! Cargados '+P.length+' productos. Ya puedes escanear con pistola.');}else{alert('No se encontraron productos. Verifica que sea tu ListaPrecios.xlsx');}};reader.readAsArrayBuffer(file);});
+ren();b.focus();
 </script></body></html>
